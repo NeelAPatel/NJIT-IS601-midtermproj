@@ -45,3 +45,7 @@ pip3 install pytest pytest-pylint pytest-cov
 pytest --pylint --cov
 ```
 
+Extra things to install
+```
+pip install python-dotenv ; environment variables
+```
