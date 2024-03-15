@@ -2,7 +2,7 @@ import importlib #For plugin import
 import pkgutil # for plugin import
 import os, sys
 
-import logging, logging.config
+import logging as log, logging.config 
 
 from dotenv import load_dotenv
 
@@ -16,9 +16,9 @@ class App:
         load_dotenv()
         self.env_settings = self.setup_env_vars()
 
-        #Logging
-        self.setup_logging()
-
+        #log
+        self.setup_log()
+        
         #program
         self.command_handler = CommandHandler()
     
@@ -26,26 +26,48 @@ class App:
     def setup_env_vars(self):
         return {key: value for key, value in os.environ.items()}
     
-    def setup_logging(self): 
+    def setup_log(self): 
+        #Set up Loggging path
         os.makedirs('logs', exist_ok=True)
-        path_rel_logging_conf = 'logging.conf'
-        path_abs_logging_conf = os.path.abspath(path_rel_logging_conf)
+        path_rel_log_conf = 'logging.conf'
+        path_abs_log_conf = os.path.abspath(path_rel_log_conf)
 
-        if os.path.exists(path_abs_logging_conf): 
-            logging.config.fileConfig(path_abs_logging_conf, disable_existing_loggers=False)
-        else:
-            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        #Get Log_Level
+        log_level = self.env_settings.get('LOG_LEVEL', 'INFO').upper()
+        numeric_level = getattr(logging, log_level, None)
+        if not isinstance(numeric_level, int):
+            raise ValueError(f'Invalid log level: {log_level}')
+        # Determine if colorization is needed
+        colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']
+
+        root_logger = logging.getLogger()
         
-        # Apply Colorizer based on LOG_COLORED setting
-        if self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']:
-            for handler in logging.getLogger().handlers:
-                if isinstance(handler, logging.StreamHandler):
-                    handler.setFormatter(Colorizer(env_settings=self.env_settings))
 
-        logging.error("Logging configured.")
+        # Use config file for logger, otherwise take the defaults
+        if os.path.exists(path_abs_log_conf): 
+            logging.config.fileConfig(path_abs_log_conf, disable_existing_loggers=False)
+        else:
+            # Fallback basic configuration
+            log.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        # Apply ColoredFormatter to console handler
+        for handler in root_logger.handlers:
+            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stderr:
+                # Apply ColoredFormatter only to the console handler
+                handler.setFormatter(Colorizer(env_settings=self.env_settings))
+            handler.setLevel(log_level)
+
+        logging.info("Logging configured.")
+
+        # # Apply Colorizer based on LOG_COLORED setting
+        # if colorize:
+        #     for handler in log.getLogger().handlers:
+        #         if isinstance(handler, log.StreamHandler):
+        #             handler.setFormatter(Colorizer(env_settings=self.env_settings))
+
+        log.info("log configured.")
 
     def fetch_plugins(self): 
-        plugins_namespace = 'plugins'
         path_rel_plugins_folder = 'plugins/'
         path_abs_plugins_folder = os.path.abspath(path_rel_plugins_folder)
         #For each item, item's name, and pkgFlag in path's list...
@@ -53,6 +75,8 @@ class App:
         # Ensure the absolute path of the plugins directory is in the Python path
         if path_abs_plugins_folder not in sys.path:
             sys.path.append(path_abs_plugins_folder)
+
+        log.debug(f'ABS Path for plugins: {path_abs_plugins_folder}')
 
         # Iterate over all packages in the plugins directory
         for _, plugin_name, is_pkg in pkgutil.iter_modules([path_abs_plugins_folder]):
@@ -63,7 +87,7 @@ class App:
                     # Assume register_plugins is a method to handle the plugin
                     self.register_plugins(plugin_module, plugin_name)
                 except ImportError as e:
-                    logging.info(f"Error while importing plugin {plugin_name}: {e}")
+                    log.info(f"Error while importing plugin {plugin_name}: {e}")
     
     def register_plugins(self, plugin_module, plugin_name):
         # for each item in folder, check if theres a subclass and register it as a command
@@ -72,7 +96,7 @@ class App:
             try:
                 if issubclass(item, (Command)):
                     self.command_handler.register_command(plugin_name, item())
-                    logging.info(f"Plugin Loaded: {plugin_name}")
+                    log.info(f"Plugin Loaded: {plugin_name}")
             except TypeError:
                 continue  # Ignore if not class
 
@@ -88,7 +112,7 @@ class App:
                 command_input = input(f'{Colorizer.GREEN}>>> {Colorizer.RESET}').strip()
                 self.command_handler.execute_command(command_input)
         except KeyboardInterrupt: 
-            logging.info("App interrupted via keyboard. Exiting gracefully.")
+            log.info("App interrupted via keyboard. Exiting gracefully.")
             sys.exit(0)
         finally: 
-            logging.info("App terminated.")
+            log.info("App terminated.")
