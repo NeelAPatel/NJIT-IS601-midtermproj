@@ -33,31 +33,76 @@ class App:
         path_abs_log_conf = os.path.abspath(path_rel_log_conf)
 
         #Get Log_Level
-        log_level = self.env_settings.get('LOG_LEVEL', 'INFO').upper()
+        log_level = self.env_settings.get('LOG_LEVEL', 'DEBUG').upper()
+        # numeric_level = getattr(logging, log_level, None)
+        # if not isinstance(numeric_level, int):
+        #     raise ValueError(f'Invalid log level: {log_level}')
+        # # Determine if colorization is needed
+        # colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']
+
+        # root_logger = logging.getLogger()
+        
+
+        # # Use config file for logger, otherwise take the defaults
+        # if os.path.exists(path_abs_log_conf): 
+        #     logging.config.fileConfig(path_abs_log_conf, disable_existing_loggers=False)
+        # else:
+        #     # Fallback basic configuration
+        #     log.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        # # Apply ColoredFormatter to console handler
+        # for handler in root_logger.handlers:
+        #     if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stderr:
+        #         # Apply ColoredFormatter only to the console handler
+        #         handler.setFormatter(Colorizer(env_settings=self.env_settings))
+        #     handler.setLevel(numeric_level)
+        # print(log.getLogger().level)
+        # logging.info("Logging configured.")
+
         numeric_level = getattr(logging, log_level, None)
         if not isinstance(numeric_level, int):
             raise ValueError(f'Invalid log level: {log_level}')
-        # Determine if colorization is needed
         colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']
-
+    
         root_logger = logging.getLogger()
-        
-
         # Use config file for logger, otherwise take the defaults
-        if os.path.exists(path_abs_log_conf): 
+        if os.path.exists(path_abs_log_conf):
             logging.config.fileConfig(path_abs_log_conf, disable_existing_loggers=False)
         else:
             # Fallback basic configuration
-            log.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logging.basicConfig(level=numeric_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        # Apply ColoredFormatter to console handler
+        # Explicitly set the log level on the root logger and all handlers
+        root_logger.setLevel(numeric_level)
         for handler in root_logger.handlers:
-            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stderr:
+            handler.setLevel(numeric_level)
+
+            if colorize and isinstance(handler, logging.StreamHandler) and handler.stream == sys.stderr:
                 # Apply ColoredFormatter only to the console handler
                 handler.setFormatter(Colorizer(env_settings=self.env_settings))
-            handler.setLevel(log_level)
 
-        logging.info("Logging configured.")
+        # # Use config file for logger, otherwise take the defaults
+        # if os.path.exists(path_abs_log_conf):
+        #     print("My log used")
+        #     logging.config.fileConfig(path_abs_log_conf, disable_existing_loggers=False)
+        # else:
+        #     print("fallback log used")
+        #     # Fallback basic configuration
+        #     logging.basicConfig(level=numeric_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+        # # Apply ColoredFormatter to console handler if needed
+        # if colorize:
+        #     for handler in root_logger.handlers:
+        #         if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stderr:
+        #             # Apply ColoredFormatter only to the console handler
+        #             handler.setFormatter(Colorizer(env_settings=self.env_settings))
+        #         handler.setLevel(numeric_level)
+        #         handler.setLevel(numeric_level)
+    
+        # #Explicitly set the log level on the root logger to respect the log_level from env_settings
+        # root_logger.setLevel(numeric_level)
+
+
 
         # # Apply Colorizer based on LOG_COLORED setting
         # if colorize:
@@ -112,7 +157,7 @@ class App:
                 command_input = input(f'{Colorizer.GREEN}>>> {Colorizer.RESET}').strip()
                 self.command_handler.execute_command(command_input)
         except KeyboardInterrupt: 
-            log.info("App interrupted via keyboard. Exiting gracefully.")
+            log.warning("App interrupted via keyboard. Exiting gracefully.")
             sys.exit(0)
         finally: 
-            log.info("App terminated.")
+            log.error("App terminated.")

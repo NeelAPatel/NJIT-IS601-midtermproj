@@ -32,7 +32,7 @@ class Colorizer(logging.Formatter):
         levelname_color = self.COLOR_MAP.get(record.levelno, self.RESET) if log_colored_setting in ['COLOR', 'COLORED'] else ""
 
         # Apply color only to the log level part, and grey to the rest of the message if applicable
-        record.levelname = f"{levelname_color}{record.levelname}{self.RESET}"
+        record.levelname = f"{levelname_color}{record.levelname}{full_message_color}"
         formatted_message = super().format(record)
 
         return f"{full_message_color}{formatted_message}{self.RESET}"
