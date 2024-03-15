@@ -112,13 +112,6 @@ class App:
             except TypeError:
                 continue  # Ignore if not class
 
-    def execute_command_in_process(self, command_input):
-            """Method to execute a command in a separate process."""
-            if command_input == "exit":
-                self.exit_event.set()
-            else:
-                self.command_handler.execute_command(command_input)
-
     
     def start(self): 
         #Load Plugins
