@@ -64,11 +64,11 @@ class App:
         else:
             logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         
-        # Apply ColoredFormatter based on LOG_COLORED setting
-        if self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']:
-            for handler in logging.getLogger().handlers:
-                if isinstance(handler, logging.StreamHandler):
-                    handler.setFormatter(ColoredFormatter(env_settings=self.env_settings))
+        # # Apply ColoredFormatter based on LOG_COLORED setting
+        # if self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']:
+        #     for handler in logging.getLogger().handlers:
+        #         if isinstance(handler, logging.StreamHandler):
+        #             handler.setFormatter(ColoredFormatter(env_settings=self.env_settings))
 
 
         logging.error("Logging configured.")
