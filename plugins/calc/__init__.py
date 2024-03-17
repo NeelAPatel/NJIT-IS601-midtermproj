@@ -1,18 +1,51 @@
 from decimal import Decimal, InvalidOperation
+import os
 import sys
+
+import pandas as pd
 
 from commands import Command
 
 from decimal import Decimal, InvalidOperation
 
 from plugins.calc.calculator import Calculator
-
+import logging as log
 
 class CalcCommand(Command): 
 
-    # def __init__(self):
-    #     self.command_handler = CommandHandler()
+    # def __init__(self, history_df):
+    #     self.hist_df = history_df
+    #     # self.command_handler = CommandHandler()
+    
+    # # @staticmethod
+    # # def manage_history(self):
+    # #     #get name of file from env
+    # #     hist_file_name = self.env_settings.get('HIST_FILE_NAME', 'calc_history.csv')
+    # #     path_rel_hist_folder = self.env_settings.get('HIST_FILE_PATH', '/')
+    # #     path_abs_hist_folder = os.path.abspath(path_rel_hist_folder)
+    # #     path_abs_hist_file = os.path.join(path_abs_hist_folder, hist_file_name)
+    # #     log.debug(hist_file_name)
+    # #     log.debug(path_rel_hist_folder)
+    # #     log.debug(path_abs_hist_folder)
+    # #     log.debug(path_abs_hist_file)
+        
 
+    # #     if (os.path.exists(path_abs_hist_file)): 
+    # #         hist_df = pd.read_csv(path_abs_hist_file)
+    # #         log.info("Loaded existing history file")
+    # #     else: 
+    # #         columns = ['operand', 'num1', 'num2', 'result']
+    # #         hist_df = pd.DataFrame(columns=columns)
+    # #         hist_df.to_csv(path_abs_hist_file)
+        
+    # #     return hist_df
+
+
+    #     # os.makedirs('logs', exist_ok=True)
+    #     # path_rel_log_conf = 'logging.conf'
+    #     # path_abs_log_conf = os.path.abspath(path_rel_log_conf):weird
+    #     #get path of file from env
+            
     @staticmethod
     def run_calculations(a:Decimal, b:Decimal, operation_name:str):
         # uses functions imported from calc.operations to randomly generate one of the ops
@@ -32,10 +65,12 @@ class CalcCommand(Command):
             b_decimal = Decimal(b) 
             
             #Use .get to handle unknown operations from the dictionary
-            curr_operation = operation_maps.get(operation_name) 
-            
-            if curr_operation:
-                print(f"Result: {a} {operation_name} {b} = {curr_operation(a_decimal, b_decimal)}")
+            curr_operation_func = operation_maps.get(operation_name) 
+            result = curr_operation_func(a_decimal, b_decimal)
+
+            if curr_operation_func:
+                print(f"Result: {a} {operation_name} {b} = {result}")
+                #append to hist_df
             else:
                 print(f"Unknown operation: {operation_name}")
 
