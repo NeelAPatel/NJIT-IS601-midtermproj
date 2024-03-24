@@ -3,7 +3,8 @@ import sys
 from commands import Command 
 import data_store
 import os
-
+import pandas as pd
+import logging as log
 
 class HistoryCommand(Command): 
     def execute(self, *args):         
@@ -17,8 +18,8 @@ class HistoryCommand(Command):
                 'last': self.last,
                 'add' : self.add,
                 'save': self.save,
-                'delete': self.delete,
-                'erase': self.erase 
+                'delrow': self.delrow,
+                'reloadfile': self.reloadfile 
             }
             method = switchcase_dict.get(args[0], self.default_response)
             method(*args)
@@ -36,56 +37,88 @@ class HistoryCommand(Command):
         print('  clear           empties the dataframe table')
         print('  last            shows last calculation stored in the table')
         print('  add             adds a static calculation of "5*4 = 20"')
+        print('  delrow [num]    delete specified row from history')
         print('  save            firm saves the table to the csv file location')
-        print('  delete [num]    delete specified row from history')
+        print('  reloadfile      reloads file from known history path')
         print('     usage:  history delete 1')
         print('')
         
     
     def show(self, *args): 
-        hist_df = data_store.hist_df
-        print(hist_df)
-        print()
+        try:
+            print(data_store.hist_df)
+        except Exception as e:
+            print(f"Error showing history: {e}")
         # complete
 
     def clear(self, *args):
-        hist_df = data_store.hist_df
-        hist_df = hist_df.iloc[0:0]
-        print("History Cleared!")
-        print()
+        try:
+            log.info("History - Clearing dataframe to empty table")
+            data_store.hist_df = data_store.hist_df[0:0]  # Clearing the DataFrame
+            log.info("History - Dataframe cleared")
+            print("Cleared history dataframe!")
+            
+            
+            self.save()  # Save after clearing
+        except Exception as e:
+            log.error(f"History - Error clearing history: {e}")
         #complete
 
     def last(self, *args): 
-        hist_df = data_store.hist_df
-        #check if table is empty 
-        # if empty, fail gracefully
-        latest_row = hist_df.iloc[-1]
-        print(latest_row)
+        try:
+            print(data_store.hist_df.iloc[-1])
+        except IndexError:
+            print("Data frame is empty.")
     
 
     def add(self, *args): 
-        hist_df = data_store.hist_df
+        log.info("")
         new_row = {'operand': '*', 'num1': 5, 'num2': 4, 'result': 20}
-        hist_df.loc[len(hist_df)] = new_row
+        data_store.hist_df.loc[len(data_store.hist_df)] = new_row
+
         print("added: ")
         print(new_row)
-        print(hist_df)
-
+        print("Result table: ")
+        print(data_store.hist_df)
+        self.save()
         print()
 
+
+    # works
     def save(self, *args):
-        hist_df = data_store.hist_df
-        hist_df.to_csv(data_store.hist_path, index=False)
-        print("Save csv")
+        my_df = data_store.hist_df
+        my_df.to_csv(data_store.hist_path, index=False)
+        print("!! Saved to File !!")
 
 
-    def delete (self, *args): 
-        print("deleting row" + args[1])
-        hist_df = data_store.hist_df
-        hist_id = hist_df.drop(args[1])
+    def delrow (self, *args): 
 
-    def erase(self, *args): 
-        os.remove(data_store.hist_path)
-        print("erased file")
-        sys.exit(0)
+        if len(args) != 2:
+            print("Error: Incorrect number of arguments provided.")
+            return
+        try:
+            row_index = int(args[1])
+            data_store.hist_df = data_store.hist_df.drop(data_store.hist_df.index[row_index])
+            data_store.hist_df.reset_index(drop=True, inplace=True)  # Resetting the index and dropping the old index column
+            self.save()
+        except ValueError:
+            log.error("Error: Provided index is not an integer.")
         
+        except KeyError:
+            log.error(f"Error: No row found at index {row_index}.")
+
+
+
+    def reloadfile(self, *args):
+            try:
+                data_store.hist_df = pd.read_csv(data_store.hist_path)
+                # Resetting the index in case there are gaps from previous operations
+                data_store.hist_df.reset_index(drop=True, inplace=True)
+                print("Data successfully reloaded from file.")
+            except FileNotFoundError:
+                log.error(f"File not found at {data_store.hist_path}. Ensure the file path is correct.")
+            except pd.errors.EmptyDataError:
+                log.error("File is empty. Starting with an empty DataFrame.")
+                data_store.hist_df = pd.DataFrame()  # Creating an empty DataFrame
+            except Exception as e:
+                log.error(f"An error occurred while reloading from file: {e}")
