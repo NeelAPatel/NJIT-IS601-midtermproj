@@ -18,5 +18,5 @@ def divide (a: Decimal, b: Decimal) -> Decimal:
         raise ValueError("Cannot divide by zero.")
     return a / b;
 
-def sqrt (a: Decimal) -> Decimal:
-    return Decimal(a).sqrt()
+# def sqrt (a: Decimal) -> Decimal:
+#     return Decimal(a).sqrt()

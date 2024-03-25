@@ -16,9 +16,8 @@ class HistoryCommand(Command):
                 'show': self.show, 
                 'clear': self.clear, 
                 'last': self.last,
-                                'dummy' : self.dummy,
-
-                                                'add' : self.add,
+                'dummy' : self.dummy,
+                'add' : self.add,
                 'save': self.save,
                 'delrow': self.delrow,
                 'reloadfile': self.reloadfile 
@@ -36,12 +35,12 @@ class HistoryCommand(Command):
         print('')
         print('Commands: ')
         print('  show            prints out the dataframe table')
-        print('  clear           empties the dataframe table')
-        print('  last            shows last calculation stored in the table')
         print('  dummy           appends a dummy calculation of "5*4 = 20"')
+        print('  last            shows last calculation stored in the table')
         print('  delrow [num]    delete specified row from history')
         print('  save            firm saves the table to the csv file location')
         print('  reloadfile      reloads file from known history path')
+        print('  clear           empties the dataframe table')
         print('     usage:  history delete 1')
         print('')
         
@@ -75,21 +74,21 @@ class HistoryCommand(Command):
 
     def add(self, *args): 
         # used by calc to save new data with args[0] = null
-        print("hist ", args)        
-        
+        try: 
+            new_row = {'operand': args[2], 'num1': args[1] , 'num2': args[3], 'result': args[4]}
+            data_store.hist_df.loc[len(data_store.hist_df)] = new_row
+            print("New calculation added: ")
+            # print(new_row)
+            # print("Result table: ")
+            # print(data_store.hist_df)
+            self.save()
+            print()
+        except IndexError: 
+            log.error("Error: Incorrect arguments for 'history add': $> history add <num1> <sign> <num2> <result>")
         
 
-        new_row = {'operand': args[2], 'num1': args[1] , 'num2': args[3], 'result': args[4]}
-        log.info("")
-        # new_row = {'operand': '*', 'num1': 5, 'num2': 4, 'result': 20}
-        data_store.hist_df.loc[len(data_store.hist_df)] = new_row
 
-        print("added: ")
-        print(new_row)
-        print("Result table: ")
-        print(data_store.hist_df)
-        self.save()
-        print()
+
 
     def dummy(self, *args): 
         log.info("")
@@ -135,6 +134,7 @@ class HistoryCommand(Command):
                 # Resetting the index in case there are gaps from previous operations
                 data_store.hist_df.reset_index(drop=True, inplace=True)
                 print("Data successfully reloaded from file.")
+                self.show()
             except FileNotFoundError:
                 log.error(f"File not found at {data_store.hist_path}. Ensure the file path is correct.")
             except pd.errors.EmptyDataError:

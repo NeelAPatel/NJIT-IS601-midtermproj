@@ -24,8 +24,8 @@ class CalcCommand(Command):
             'add': Calculator.add,
             'subtract': Calculator.subtract,
             'multiply': Calculator.multiply,
-            'divide': Calculator.divide,
-            'sqrt': Calculator.sqrt
+            'divide': Calculator.divide
+            # 'sqrt': Calculator.sqrt
         }
 
         sign_maps = {
@@ -33,12 +33,17 @@ class CalcCommand(Command):
             'subtract': '-',
             'multiply': '*',
             'divide': '/',
-            'sqrt': 'sqrt'
+            # 'sqrt': 'sqrt'
         }
 
-        operation_name = args[0]
-        a = args[1]
-        b = b = args[2] if len(args) > 2 else None
+        try: 
+            operation_name = args[0]
+            a = args[1]
+            b = b = args[2] if len(args) > 2 else None
+        except IndexError: 
+            log.error("Error: Missing arguments. Please follow Usage guide")
+            self.defaultMessage()
+
 
         # Unified error handling for decimal conversion
         try:
@@ -49,12 +54,7 @@ class CalcCommand(Command):
             #Use .get to handle unknown operations from the dictionary
             curr_operation_func = operation_maps.get(operation_name) 
             curr_operation_sign = sign_maps.get(operation_name)
-
-            if (operation_name == "sqrt"): 
-                result = curr_operation_func(a_decimal)
-                a,b = "",a # flip for formatting in csv
-            else: 
-                result = curr_operation_func(a_decimal, b_decimal)
+            result = curr_operation_func(a_decimal, b_decimal)
 
 
             if curr_operation_func:
@@ -80,7 +80,7 @@ class CalcCommand(Command):
         print('    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)')
         print('    multiply <num1> <num2>  multiplies two numbers (num1*num2)')
         print('    divide <num1> <num2>    divide num1 by num2 (num1/num2)')
-        print('    sqrt <num1>             square root of num1')
+        # print('    sqrt <num1>             square root of num1')
     
     # @staticmethod
     def save_operation(self, *args):
@@ -91,7 +91,12 @@ class CalcCommand(Command):
         # from plugins.history.hi import HistoryCommand  as histComm.add( *args)
 
     def execute(self, *args): 
-        if len(args) >= 3:
+        if len(args) == 0: 
+            self.defaultMessage(*args)
+            return
+        
+        if len(args) > 3:
+            log.error("Error: Too many arguments for calc")
             self.defaultMessage(*args)
             return
         

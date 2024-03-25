@@ -1,7 +1,7 @@
 from typing import Callable
 from plugins.calc.calculator.calculation import Calculation
 from plugins.calc.calculator.calculations import Calculations
-from plugins.calc.calculator.operations import add, subtract, multiply, divide, sqrt
+from plugins.calc.calculator.operations import add, subtract, multiply, divide #, sqrt
 from decimal import Decimal # Importing Decimal to typeforce 
 
 
@@ -46,7 +46,7 @@ class Calculator:
         # Call current class's owon _perform_operation on divide operation
         return Calculator._perform_operation(a,b, divide)
     
-    @staticmethod
-    def sqrt(a: Decimal) -> Decimal:
-        # Call current class's owon _perform_operation on sqrt operation
-        return Calculator._perform_operation(a, sqrt)
+    # @staticmethod
+    # def sqrt(a: Decimal) -> Decimal:
+    #     # Call current class's owon _perform_operation on sqrt operation
+    #     return Calculator._perform_operation(a, sqrt)
