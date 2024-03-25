@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import data_store
 
+import readline
+
 class App: 
     def __init__(self):
         #Env Vars 

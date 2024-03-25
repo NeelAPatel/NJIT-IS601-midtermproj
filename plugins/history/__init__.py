@@ -16,7 +16,9 @@ class HistoryCommand(Command):
                 'show': self.show, 
                 'clear': self.clear, 
                 'last': self.last,
-                'add' : self.add,
+                                'dummy' : self.dummy,
+
+                                                'add' : self.add,
                 'save': self.save,
                 'delrow': self.delrow,
                 'reloadfile': self.reloadfile 
@@ -36,7 +38,7 @@ class HistoryCommand(Command):
         print('  show            prints out the dataframe table')
         print('  clear           empties the dataframe table')
         print('  last            shows last calculation stored in the table')
-        print('  add             adds a static calculation of "5*4 = 20"')
+        print('  dummy           appends a dummy calculation of "5*4 = 20"')
         print('  delrow [num]    delete specified row from history')
         print('  save            firm saves the table to the csv file location')
         print('  reloadfile      reloads file from known history path')
@@ -72,6 +74,24 @@ class HistoryCommand(Command):
     
 
     def add(self, *args): 
+        # used by calc to save new data with args[0] = null
+        print("hist ", args)        
+        
+        
+
+        new_row = {'operand': args[2], 'num1': args[1] , 'num2': args[3], 'result': args[4]}
+        log.info("")
+        # new_row = {'operand': '*', 'num1': 5, 'num2': 4, 'result': 20}
+        data_store.hist_df.loc[len(data_store.hist_df)] = new_row
+
+        print("added: ")
+        print(new_row)
+        print("Result table: ")
+        print(data_store.hist_df)
+        self.save()
+        print()
+
+    def dummy(self, *args): 
         log.info("")
         new_row = {'operand': '*', 'num1': 5, 'num2': 4, 'result': 20}
         data_store.hist_df.loc[len(data_store.hist_df)] = new_row
@@ -82,7 +102,6 @@ class HistoryCommand(Command):
         print(data_store.hist_df)
         self.save()
         print()
-
 
     # works
     def save(self, *args):
@@ -106,7 +125,8 @@ class HistoryCommand(Command):
         
         except KeyError:
             log.error(f"Error: No row found at index {row_index}.")
-
+        except IndexError: 
+            log.error(f"Error: Table is empty, no rows to delete.")
 
 
     def reloadfile(self, *args):
