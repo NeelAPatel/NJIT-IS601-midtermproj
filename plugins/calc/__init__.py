@@ -15,9 +15,7 @@ import logging as log
 
 class CalcCommand(Command): 
 
-
     @staticmethod
-    # def run_calculations(self, a:Decimal, b:Decimal, operation_name:str):
     def run_calculations(self, *args):
         # uses functions imported from calc.operations to randomly generate one of the ops
         operation_maps = {
@@ -25,15 +23,13 @@ class CalcCommand(Command):
             'subtract': Calculator.subtract,
             'multiply': Calculator.multiply,
             'divide': Calculator.divide
-            # 'sqrt': Calculator.sqrt
         }
 
         sign_maps = {
             'add': '+',
             'subtract': '-',
             'multiply': '*',
-            'divide': '/',
-            # 'sqrt': 'sqrt'
+            'divide': '/'
         }
 
         try: 
@@ -80,30 +76,20 @@ class CalcCommand(Command):
         print('    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)')
         print('    multiply <num1> <num2>  multiplies two numbers (num1*num2)')
         print('    divide <num1> <num2>    divide num1 by num2 (num1/num2)')
-        # print('    sqrt <num1>             square root of num1')
-    
-    # @staticmethod
+        
     def save_operation(self, *args):
-        print("save_op", args)
         from plugins.history import HistoryCommand as histComm
         hist_instance = histComm()
         hist_instance.add(*args)
-        # from plugins.history.hi import HistoryCommand  as histComm.add( *args)
 
     def execute(self, *args): 
         if len(args) == 0: 
             self.defaultMessage(*args)
             return
-        
-        if len(args) > 3:
+        elif len(args) > 3:
             log.error("Error: Too many arguments for calc")
             self.defaultMessage(*args)
             return
-        
-        #Set arguments
-        # operation = args[0]
-        # a = args[1]
-        # b = args[2] if args[2] is not None else None
         
         #Take system args and run as a function
         self.run_calculations(self,*args)
