@@ -59,14 +59,6 @@ class CalcCommand(Command):
 
 
     def defaultMessage(self, *args): 
-        # print('Usage: ')
-        # print('    calc <operation> <num1> <num2 if needed>')
-        # print('')
-        # print('Operations: ')
-        # print('    add <num1> <num2>       adds two numbers (num1+num2)')
-        # print('    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)')
-        # print('    multiply <num1> <num2>  multiplies two numbers (num1*num2)')
-        # print('    divide <num1> <num2>    divide num1 by num2 (num1/num2)')
         message = (
             'Usage: \n'
             '    calc <operation> <num1> <num2 if needed>\n'
