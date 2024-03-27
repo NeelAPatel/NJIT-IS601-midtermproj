@@ -1,64 +1,131 @@
 # pylint: disable=trailing-whitespace, missing-final-newline
-from decimal import Decimal, InvalidOperation
-from unittest.mock import patch
+''' Tests calcPlugin file'''
+
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
 import pytest
 from plugins.calc import CalcCommand
-import pytest
-from plugins.calc import CalcCommand
 
-# @pytest.mark.parametrize("a, b, operation_name, expected_output", [
-#     (Decimal('1'), Decimal('1'), 'add', 'Result: 1 add 1 = 2'),
-#     # (Decimal('5'), Decimal('3'), 'subtract', 'Result: 5 subtract 3 = 2'),
-#     # (Decimal('2'), Decimal('3'), 'multiply', 'Result: 2 multiply 3 = 6'),
-#     # Additional test cases can be added here for 'divide' and edge cases
-# ])
-# def test_calc_command_operations(a, b, operation_name, expected_output):
-#     with patch('builtins.print') as mocked_print:
-#         calc_command_instance = CalcCommand()
-#         calc_command_instance.run_calculations(a, b, operation_name)
-#         mocked_print.assert_called_with(expected_output)
-        
-# # def test_calc_command_valid_operations(capsys, a, b, operation, expected_output):
-# #     CalcCommand.run_calculations(a, b, operation)
-# #     captured = capsys.readouterr()
-# #     assert expected_output in captured.out
+@pytest.mark.parametrize("val_a, val_b, operation_name, expected_output", [
+    (Decimal('1'), Decimal('1'), 'add', 'Result: 1 add 1 = 2'),
+    (Decimal('5'), Decimal('3'), 'subtract', 'Result: 5 subtract 3 = 2'),
+    (Decimal('2'), Decimal('3'), 'multiply', 'Result: 2 multiply 3 = 6'),
+])
 
-# # def test_calc_command_unknown_operation():
-# #     with patch('logging.error') as mock_error:
-# #         calc_command_instance = CalcCommand()
-# #         CalcCommand.run_calculations(calc_command_instance,"unknown", "1", "1", )
-# #         mock_error.assert_called_with("Unknown operation: unknown")
+@patch('data_store.hist_df')
+def test_run_calculations(mock_hist_df, capsys, val_a, val_b, operation_name, expected_output):
+    ''' Tests valid run calculations'''
 
-# def test_calc_command_invalid_number_input(capsys):
-#     with patch('logging.error') as mock_error:
-#         calc_command_instance = CalcCommand()
-#         CalcCommand.run_calculations(calc_command_instance, "add", "a", "1")
+    # Configure the mock to avoid AttributeError
+    mock_hist_df.loc = MagicMock()
 
-#         captured = capsys.readouterr()
-#         assert "Invalid number input: add or a is not a valid number." in captured.out
-#         # mock_error.assert_called_with(f"Invalid number input: add or a is not a valid number.")
+    calc_command_instance = CalcCommand()
+    calc_command_instance.run_calculations(val_a, val_b, operation_name)
 
-# def test_calc_command_division_by_zero(capsys):
-#     with patch('logging.error') as mock_error:
-#         calc_command_instance = CalcCommand()
-#         CalcCommand.run_calculations("1", "0", "divide")
-#         mock_error.assert_called_with("An error occurred: Cannot divide by zero.")
+    # Capture the output
+    captured = capsys.readouterr()
+    
+    assert captured.out.startswith(expected_output)
 
-# def test_execute_with_valid_input(capsys):
-#     command = CalcCommand()
-#     command.execute("add","2", "3")
-#     captured = capsys.readouterr()
-#     assert "Result: 2 add 3 = 5" in captured.out
+def test_unknown_operation(capsys):
+    ''' Tests unknown operation calculation run'''
+    with patch('logging.error') as mock_log_error:
+        calc_command_instance = CalcCommand()
+        calc_command_instance.run_calculations(Decimal('1'), Decimal('1'), 'nonexistent_operation')
 
-# def test_execute_with_incorrect_args(capsys):
-#     with patch('logging.error') as mock_error:
-#         command = CalcCommand()
-#         command.execute("2")  # Insufficient arguments
-#         mock_error.assert_called_with(f"Error: Missing arguments. Please follow Usage guide")
-#         # assert "Error: Missing arguments. Please follow Usage guide" in captured.out
+        # Assert that no output is printed
+        captured = capsys.readouterr()
+        assert captured.out == ''
 
-# def test_execute_integration(capsys):
-#     command = CalcCommand()
-#     command.execute("divide","10", "5")
-#     captured = capsys.readouterr()
-#     assert "Result: 10 divide 5 = 2" in captured.out
+        # Assert the log error was called
+        mock_log_error.assert_called_with("Unknown operation: nonexistent_operation")
+
+def test_invalid_decimal_input(capsys):
+    ''' Tests bad decimal input calculation run'''
+    with patch('logging.error') as mock_log_error:
+        calc_command_instance = CalcCommand()
+        # Providing a clearly invalid decimal input
+        calc_command_instance.run_calculations('not_a_decimal', Decimal('1'), 'add')
+
+        # Assert that no output is printed to stdout
+        captured = capsys.readouterr()
+        assert captured.out == ''
+
+        # Using assert_called_once() here as we expect a single call with a message containing 'Invalid number input'
+        mock_log_error.assert_called_once()
+        args, _ = mock_log_error.call_args
+        assert 'Invalid number input' in args[0]
+
+def test_division_by_zero(capsys):
+    ''' Tests div by zero calculation run'''
+    with patch('logging.error') as mock_log_error:
+        calc_command_instance = CalcCommand()
+        # Setting up a division by zero scenario
+        calc_command_instance.run_calculations(Decimal('1'), Decimal('0'), 'divide')
+
+        # Assert that no output is printed to stdout
+        captured = capsys.readouterr()
+        assert captured.out == ''
+
+        # Assert that logging.error was called
+        mock_log_error.assert_called_with("An error occurred: Cannot divide by zero")
+
+def test_default_message(capsys):
+    ''' Tests defaultMessage()'''
+    calc_command_instance = CalcCommand()
+    calc_command_instance.defaultMessage()
+
+    # Capture the output
+    captured = capsys.readouterr()
+    expected_output = (
+        'Usage: \n'
+        '    calc <operation> <num1> <num2 if needed>\n'
+        '\n'
+        'Operations: \n'
+        '    add <num1> <num2>       adds two numbers (num1+num2)\n'
+        '    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)\n'
+        '    multiply <num1> <num2>  multiplies two numbers (num1*num2)\n'
+        '    divide <num1> <num2>    divide num1 by num2 (num1/num2)\n'
+    )
+
+    assert captured.out == expected_output
+
+def test_execute_with_valid_arguments(capsys):
+    ''' Tests Execute() w/ valid arguments'''
+    calc_command_instance = CalcCommand()
+    calc_command_instance.execute("add", 1, 2)
+
+    captured = capsys.readouterr()
+    assert "Result: 1 add 2 = 3" in captured.out
+
+
+def test_execute_with_no_arguments(capsys):
+    ''' Tests Execute() w/ no arguments'''
+    calc_command_instance = CalcCommand()
+    calc_command_instance.execute()
+
+    captured = capsys.readouterr()
+    expected_output = (
+        'Usage: \n'
+        '    calc <operation> <num1> <num2 if needed>\n'
+        '\n'
+        'Operations: \n'
+        '    add <num1> <num2>       adds two numbers (num1+num2)\n'
+        '    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)\n'
+        '    multiply <num1> <num2>  multiplies two numbers (num1*num2)\n'
+        '    divide <num1> <num2>    divide num1 by num2 (num1/num2)\n'
+    )
+    assert captured.out == expected_output
+
+def test_execute_with_missing_arguments(capsys):
+    ''' Tests Execute() w/ missing arguments'''
+    with patch('logging.error') as mock_log_error:
+        calc_command_instance = CalcCommand()
+        calc_command_instance.execute("add", 1)
+
+        # Assert that no output is printed
+        captured = capsys.readouterr()
+        assert captured.out == ''
+
+        # Assert the log error was called with the expected message
+        mock_log_error.assert_called_with("Error: Incorrect number of arguments for calc")
