@@ -15,8 +15,8 @@ import logging as log
 
 class CalcCommand(Command): 
 
-    # @staticmethod
     # def run_calculations(self, *args):
+    # @staticmethod
     def run_calculations(self, a:Decimal, b:Decimal, operation_name:str):
         # uses functions imported from calc.operations to randomly generate one of the ops
         operation_maps = {
@@ -33,41 +33,51 @@ class CalcCommand(Command):
             'divide': '/'
         }
 
-        # Unified error handling for decimal conversion
+        #Works
+        if operation_name not in operation_maps:
+            log.error(f"Unknown operation: {operation_name}")
+            return
+        
+        # Convert inputs to Decimal and validate
         try:
-            #Test if a and b can be set to decimal 
             a_decimal = Decimal(a)
-            b_decimal = Decimal(b) if b is not None else None
-            
-            #Use .get to handle unknown operations from the dictionary
-            curr_operation_func = operation_maps.get(operation_name) 
-            curr_operation_sign = sign_maps.get(operation_name)
+            b_decimal = Decimal(b)
+        except InvalidOperation as e:
+            log.error(f"Invalid number input: {e}")
+            return
+
+        try: 
+            # Perform the calculation
+            curr_operation_func = operation_maps[operation_name]
+            curr_operation_sign = sign_maps[operation_name]
             result = curr_operation_func(a_decimal, b_decimal)
 
-
-            if curr_operation_func:
-                print(f"Result: {a} {operation_name} {b} = {result}")
-                self.save_operation("add",a, curr_operation_sign, b, result)
-            else:
-                log.error(f"Unknown operation: {operation_name}")
-
-        except InvalidOperation: # not a number
-            log.error(f"Invalid number input: {a} or {b} is not a valid number.")
-        except ZeroDivisionError: # Dividing by zero
-            log.error("An error occurred: Cannot divide by zero.")
-        except Exception as e: # Catch-all for unexpected errors
-            log.error(f"An error occurred: {e}")
+            print(f"Result: {a} {operation_name} {b} = {result}")
+            self.save_operation("add",a, curr_operation_sign, b, result)            
+        except ValueError: 
+            log.error("An error occurred: Cannot divide by zero")
 
 
     def defaultMessage(self, *args): 
-        print('Usage: ')
-        print('    calc <operation> <num1> <num2 if needed>')
-        print('')
-        print('Operations: ')
-        print('    add <num1> <num2>       adds two numbers (num1+num2)')
-        print('    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)')
-        print('    multiply <num1> <num2>  multiplies two numbers (num1*num2)')
-        print('    divide <num1> <num2>    divide num1 by num2 (num1/num2)')
+        # print('Usage: ')
+        # print('    calc <operation> <num1> <num2 if needed>')
+        # print('')
+        # print('Operations: ')
+        # print('    add <num1> <num2>       adds two numbers (num1+num2)')
+        # print('    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)')
+        # print('    multiply <num1> <num2>  multiplies two numbers (num1*num2)')
+        # print('    divide <num1> <num2>    divide num1 by num2 (num1/num2)')
+        message = (
+            'Usage: \n'
+            '    calc <operation> <num1> <num2 if needed>\n'
+            '\n'
+            'Operations: \n'
+            '    add <num1> <num2>       adds two numbers (num1+num2)\n'
+            '    subtract <num1> <num2>  subtract num2 from num1 (num1-num2)\n'
+            '    multiply <num1> <num2>  multiplies two numbers (num1*num2)\n'
+            '    divide <num1> <num2>    divide num1 by num2 (num1/num2)'
+        )
+        print(message)
         
     def save_operation(self, *args):
         from plugins.history import HistoryCommand as histComm
@@ -78,20 +88,19 @@ class CalcCommand(Command):
         if len(args) == 0: 
             self.defaultMessage(*args)
             return
-        elif len(args) > 3:
-            log.error("Error: Too many arguments for calc")
-            self.defaultMessage(*args)
+        elif not  2 < len(args) < 4:
+            log.error("Error: Incorrect number of arguments for calc")
+            # self.defaultMessage(*args)
             return
         
 
         try: 
             operation = args[0]
             a = args[1]
-            b = b = args[2] if len(args) > 2 else None
+            b = b = args[2]
             #Take system args and run as a function
             # self.run_calculations(self,*args)
-            self.run_calculations(self, a, b, operation)
-            
-        except IndexError: 
-            log.error("Error: Missing arguments. Please follow Usage guide")
-            self.defaultMessage()
+            self.run_calculations(a, b, operation)
+        except Exception as e:
+            # Catch-all for any unexpected errors
+            log.error(f"An unexpected error occurred: {e}")
