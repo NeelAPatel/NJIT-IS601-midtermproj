@@ -1,3 +1,4 @@
+# pylint: disable=trailing-whitespace, missing-final-newline
 '''Tests Hello command'''
 from plugins.hello import HelloCommand
 

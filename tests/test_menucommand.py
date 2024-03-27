@@ -1,3 +1,4 @@
+# pylint: disable=trailing-whitespace, missing-final-newline
 '''This module tests the menu command with prepared plugin lists'''
 from unittest.mock import patch
 from plugins.menu import MenuCommand

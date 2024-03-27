@@ -1,9 +1,14 @@
+# pylint: disable=trailing-whitespace, missing-final-newline
+# import logging
 import os
+# import sys
 from unittest.mock import patch, MagicMock
 import pytest
 
 # Importing the App class from the app package. Note: This assumes that the app package is accessible in your PYTHONPATH.
 from app import App
+# from app.Colorizer import Colorizer
+# from commands import Command, CommandHandler
 
 @pytest.fixture
 def app_instance():
@@ -65,3 +70,64 @@ def test_manage_history_no_existing_file(app_instance):
 
         assert 'num1' in history_df.columns
         mock_to_csv.assert_called()
+
+
+def test_setup_log_with_config_file(app_instance):
+    '''Test if setup_log configures logging using a config file when available'''
+    with patch('app.os.path.exists', return_value=True), \
+         patch('app.logging.config.fileConfig') as mock_file_config:
+        app_instance.setup_log()
+        mock_file_config.assert_called()
+
+
+def test_fetch_plugins_import_error(app_instance, caplog):
+    '''Test logging of an ImportError during plugin import in fetch_plugins method'''
+    dummy_plugin_name = 'nonexistent_plugin'
+
+    # Mock pkgutil.iter_modules to return a dummy plugin
+    with patch('app.pkgutil.iter_modules', return_value=[(None, dummy_plugin_name, True)]):
+        # Mock importlib.import_module to raise ImportError for the dummy plugin
+        with patch('app.importlib.import_module', side_effect=ImportError('mock import error')):
+            # Ensure the root logger and its handlers are mocked
+            with patch('app.logging.getLogger') as mock_get_logger:
+                mock_logger = MagicMock()
+                mock_get_logger.return_value = mock_logger
+                
+                # Execute the method to test
+                app_instance.fetch_plugins()
+
+                # Verify that the expected error message was logged
+                assert any(f"Error while importing plugin {dummy_plugin_name}" in message for message in caplog.messages)
+
+def test_start_hello_command_output(app_instance, capsys):
+    '''Test the start method with 'hello' command to check 'Hello, World!' output and ensure the loop can exit'''
+    # Define a side effect function for the input mock
+    def input_side_effect(*args, **kwargs):
+        # First call returns 'hello', second call raises StopIteration to break the loop
+        yield 'hello'
+        raise StopIteration
+
+    with patch('builtins.input', side_effect=input_side_effect()), \
+            patch.object(app_instance, 'manage_history', return_value=MagicMock()), \
+            patch.object(app_instance.command_handler, 'execute_command') as mock_execute_command:
+        
+        # Set side effect to print 'Hello, World!' for 'hello' command and then raise an exception
+        def execute_command_side_effect(command):
+            if command == 'hello':
+                print('Hello, World!')
+            raise StopIteration  # Raise an exception to simulate breaking out of the loop
+
+        mock_execute_command.side_effect = execute_command_side_effect
+
+        # Use a try-except block to catch the StopIteration and prevent the test from failing due to this exception
+        try:
+            app_instance.start()
+        except StopIteration:
+            pass  # The exception is expected to break out of the loop
+
+        # Capture the output and verify 'Hello, World!' was printed
+        captured = capsys.readouterr()
+        assert 'Hello, World!' in captured.out
+
+        # Verify 'hello' command was processed
+        mock_execute_command.assert_called_once_with('hello')

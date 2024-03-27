@@ -15,8 +15,9 @@ import logging as log
 
 class CalcCommand(Command): 
 
-    @staticmethod
-    def run_calculations(self, *args):
+    # @staticmethod
+    # def run_calculations(self, *args):
+    def run_calculations(self, a:Decimal, b:Decimal, operation_name:str):
         # uses functions imported from calc.operations to randomly generate one of the ops
         operation_maps = {
             'add': Calculator.add,
@@ -31,15 +32,6 @@ class CalcCommand(Command):
             'multiply': '*',
             'divide': '/'
         }
-
-        try: 
-            operation_name = args[0]
-            a = args[1]
-            b = b = args[2] if len(args) > 2 else None
-        except IndexError: 
-            log.error("Error: Missing arguments. Please follow Usage guide")
-            self.defaultMessage()
-
 
         # Unified error handling for decimal conversion
         try:
@@ -57,14 +49,14 @@ class CalcCommand(Command):
                 print(f"Result: {a} {operation_name} {b} = {result}")
                 self.save_operation("add",a, curr_operation_sign, b, result)
             else:
-                print(f"Unknown operation: {operation_name}")
+                log.error(f"Unknown operation: {operation_name}")
 
         except InvalidOperation: # not a number
-            print(f"Invalid number input: {a} or {b} is not a valid number.")
+            log.error(f"Invalid number input: {a} or {b} is not a valid number.")
         except ZeroDivisionError: # Dividing by zero
-            print("An error occurred: Cannot divide by zero.")
+            log.error("An error occurred: Cannot divide by zero.")
         except Exception as e: # Catch-all for unexpected errors
-            print(f"An error occurred: {e}")
+            log.error(f"An error occurred: {e}")
 
 
     def defaultMessage(self, *args): 
@@ -91,5 +83,15 @@ class CalcCommand(Command):
             self.defaultMessage(*args)
             return
         
-        #Take system args and run as a function
-        self.run_calculations(self,*args)
+
+        try: 
+            operation = args[0]
+            a = args[1]
+            b = b = args[2] if len(args) > 2 else None
+            #Take system args and run as a function
+            # self.run_calculations(self,*args)
+            self.run_calculations(self, a, b, operation)
+            
+        except IndexError: 
+            log.error("Error: Missing arguments. Please follow Usage guide")
+            self.defaultMessage()

@@ -39,8 +39,6 @@ class App:
         log_level = self.env_settings.get('LOG_LEVEL', 'DEBUG').upper()
 
         numeric_level = getattr(logging, log_level, None)
-        if not isinstance(numeric_level, int):
-            raise ValueError(f'Invalid log level: {log_level}')
         colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']
     
         root_logger = logging.getLogger()
