@@ -1,4 +1,4 @@
-# pylint: disable=trailing-whitespace, missing-final-newline
+# pylint: disable=trailing-whitespace, missing-final-newline, too-many-arguments
 ''' Tests calcPlugin file'''
 
 from decimal import Decimal

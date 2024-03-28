@@ -1,4 +1,5 @@
-# pylint: disable=trailing-whitespace, missing-final-newline
+# pylint: disable=trailing-whitespace, missing-final-newline, too-many-arguments
+''' Tests the main app program'''
 # import logging
 import os
 # import sys
@@ -54,11 +55,11 @@ def test_fetch_plugins(app_instance):
         mock_import_module.assert_called_with('dummy_plugin')
 
 def test_manage_history_existing_file(app_instance):
+    '''Tests managing history function when file exists'''
     with patch('app.os.path.exists', return_value=True), \
          patch('app.pd.read_csv', return_value=pd.DataFrame({'num1': [1], 'operand': ['+'], 'num2': [1], 'result': [2]})) as mock_read_csv, \
-         patch('app.pd.DataFrame.to_csv') as mock_to_csv, \
          patch('app.log.info') as mock_logger_info:
-        
+        #  patch('app.pd.DataFrame.to_csv') as mock_to_csv, \
         history_df = app_instance.manage_history()
 
         mock_read_csv.assert_called()
@@ -112,7 +113,7 @@ def test_start_hello_command_output(app_instance, capsys):
     def input_side_effect(*args, **kwargs):
         # First call returns 'hello', second call raises StopIteration to break the loop
         yield 'hello'
-        raise StopIteration
+        # return
 
     with patch('builtins.input', side_effect=input_side_effect()), \
             patch.object(app_instance, 'manage_history', return_value=MagicMock()), \
