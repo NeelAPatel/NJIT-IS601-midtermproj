@@ -173,3 +173,40 @@ def test_delete_function(capsys, setup_history_df):
         assert expected_output in captured.out
 
 
+@pytest.mark.parametrize("setup_history_df", ['default'], indirect=True)
+def test_delete_function_too_many_args(capsys, setup_history_df):
+    with patch('plugins.history.HistoryCommand.save') as mock_save, \
+            patch('data_store.hist_path', 'dummy_path.csv'), \
+            patch('plugins.history.log.error') as mock_log_error, \
+            patch('plugins.history.log.info') as mock_log_info:
+
+        history_command_instance = HistoryCommand()
+        history_command_instance.execute('dummy')
+        history_command_instance.execute('delete', '0', '1')
+
+
+        captured = capsys.readouterr()
+
+        expected_error_msg = "Error: Incorrect number of arguments for 'delete'. Usage history delete [row_num]"
+        mock_log_error.assert_called_with(expected_error_msg)
+
+
+@pytest.mark.parametrize("setup_history_df", ['default'], indirect=True)
+def test_delete_function_index_not_int(capsys, setup_history_df):
+    with patch('plugins.history.HistoryCommand.save') as mock_save, \
+            patch('data_store.hist_path', 'dummy_path.csv'), \
+            patch('plugins.history.log.error') as mock_log_error, \
+            patch('plugins.history.log.info') as mock_log_info:
+
+        history_command_instance = HistoryCommand()
+        history_command_instance.execute('dummy')
+        history_command_instance.execute('delete', 'abcd')
+
+
+        captured = capsys.readouterr()
+
+        expected_error_msg = "Error: Provided index is not an integer."
+        mock_log_error.assert_called_with(expected_error_msg)
+
+
+
