@@ -94,9 +94,17 @@ class HistoryCommand(Command):
     def delete (self, *args): 
         log.debug(args)
 
+
+
         if len(args) != 2:
             log.error("Error: Incorrect number of arguments for 'delete'. Usage history delete [row_num]")
             return
+        
+        # Check if the DataFrame is empty first
+        if data_store.hist_df.empty:
+            log.error("Error: Table is empty, no rows to delete.")
+            return
+        
         try:
             row_index = int(args[1])
             # Resetting the index and dropping the old index column
@@ -109,9 +117,6 @@ class HistoryCommand(Command):
             return
         except KeyError:
             log.error(f"Error: No row found at index {row_index}.")
-            return
-        except IndexError: 
-            log.error(f"Error: Table is empty, no rows to delete.")
             return
 
 
@@ -136,7 +141,10 @@ class HistoryCommand(Command):
                 log.error(f"File not found at {data_store.hist_path}. Ensure the file path is correct.")
             except pd.errors.EmptyDataError:
                 log.error("File is empty. Starting with an empty DataFrame.")
-                data_store.hist_df = pd.DataFrame()  # Creating an empty DataFrame
+                columns = ['num1', 'operand', 'num2', 'result']
+                data_store.hist_df = pd.DataFrame(columns=columns)  # Creating an empty DataFrame
+                log.info("New History dataframe created")
+                self.save(*args)
             except Exception as e:
                 log.error(f"An error occurred while reloading from file: {e}")
 
