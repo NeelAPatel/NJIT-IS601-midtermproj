@@ -150,3 +150,26 @@ def test_add_function_incorrect_symbol(capsys, setup_history_df):
 
         expected_error_msg = "Error: Invalid sign symbol for 'history add': sign= +, -, *, / "
         mock_log_error.assert_called_with(expected_error_msg)
+
+
+@pytest.mark.parametrize("setup_history_df", ['default'], indirect=True)
+def test_delete_function(capsys, setup_history_df):
+    with patch('plugins.history.HistoryCommand.save') as mock_save, \
+            patch('data_store.hist_path', 'dummy_path.csv'), \
+            patch('plugins.history.log.error') as mock_log_error, \
+            patch('plugins.history.log.info') as mock_log_info:
+
+        history_command_instance = HistoryCommand()
+        history_command_instance.execute('dummy')
+        history_command_instance.execute('delete', '0')
+
+         # Capture the output
+        captured = capsys.readouterr()
+
+        # Assert that the expected messages were printed
+        expected_output = (
+            "Row 0 deleted successfully."
+        )
+        assert expected_output in captured.out
+
+
