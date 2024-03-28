@@ -26,8 +26,8 @@ class HistoryCommand(Command):
             method = switchcase_dict.get(args[0], self.default_response)
             method(*args)
 
-            if (method not in [self.show, self.last, self.delete, self.save]): 
-                self.save(*args) #autosave
+            # if (method not in [self.show, self.last, self.delete, self.save, self.add]): 
+            #     self.save(*args) #autosave
     
     def default_response(self, *args):
         message = ('Usage: \n'
@@ -61,6 +61,7 @@ class HistoryCommand(Command):
 
         print("New Dummy calculation added: ")
         print(new_row)
+        self.save(*args)
 
 
     def last(self, *args):
@@ -72,15 +73,23 @@ class HistoryCommand(Command):
     
 
     def add(self, *args): 
-        log.debug(args) 
         # used by calc to save new data with args[0] = null
         try: 
+            if (len(args) != 5): 
+                raise IndexError
+            elif (args[2] not in ['+', '-', '*', '/']):
+                raise ValueError
+            
             new_row = {'num1': args[1] , 'operand': args[2],  'num2': args[3], 'result': args[4]}
             data_store.hist_df.loc[len(data_store.hist_df)] = new_row
             print("New calculation added: ")
             print(new_row)
+            self.save(*args)
         except IndexError: 
             log.error("Error: Incorrect arguments for 'history add': $> history add <num1> <sign> <num2> <result>")
+        except ValueError: 
+            log.error("Error: Invalid sign symbol for 'history add': sign= +, -, *, / ")
+            return
         
     def delete (self, *args): 
         log.debug(args)
@@ -94,13 +103,16 @@ class HistoryCommand(Command):
             data_store.hist_df.drop(index=row_index, inplace=True)
             data_store.hist_df.reset_index(drop=True, inplace=True)
             print(f"Row {row_index} deleted successfully.")
-            # self.save()
+            self.save()
         except ValueError:
             log.error("Error: Provided index is not an integer.")
+            return
         except KeyError:
             log.error(f"Error: No row found at index {row_index}.")
+            return
         except IndexError: 
             log.error(f"Error: Table is empty, no rows to delete.")
+            return
 
 
     # works
@@ -134,5 +146,6 @@ class HistoryCommand(Command):
             data_store.hist_df = data_store.hist_df[0:0]  # Clearing the DataFrame
             log.info("History - Dataframe cleared")
             print("Cleared history dataframe!")
+            self.save(*args)
         except Exception as e:
             log.error(f"History - Error clearing history: {e}")
