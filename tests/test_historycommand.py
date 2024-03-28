@@ -58,3 +58,5 @@ def test_last_function_with_data(capsys, setup_history_df):
 
     captured = capsys.readouterr()
     assert captured.out.startswith("num1 ")
+
+
