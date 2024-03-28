@@ -3,6 +3,7 @@
 import os
 # import sys
 from unittest.mock import patch, MagicMock
+import pandas as pd
 import pytest
 
 # Importing the App class from the app package. Note: This assumes that the app package is accessible in your PYTHONPATH.
@@ -53,15 +54,21 @@ def test_fetch_plugins(app_instance):
         mock_import_module.assert_called_with('dummy_plugin')
 
 def test_manage_history_existing_file(app_instance):
-    '''Test if manage_history correctly handles an existing history file'''
-    with patch('app.os.path.exists', return_value=True), patch('app.pd.read_csv') as mock_read_csv:
-        mock_df = MagicMock()
-        mock_read_csv.return_value = mock_df
-
+    with patch('app.os.path.exists', return_value=True), \
+         patch('app.pd.read_csv', return_value=pd.DataFrame({'num1': [1], 'operand': ['+'], 'num2': [1], 'result': [2]})) as mock_read_csv, \
+         patch('app.pd.DataFrame.to_csv') as mock_to_csv, \
+         patch('app.log.info') as mock_logger_info:
+        
         history_df = app_instance.manage_history()
 
         mock_read_csv.assert_called()
-        assert history_df is mock_df
+
+        # Assert that the DataFrame has the expected columns
+        expected_columns = ['num1', 'operand', 'num2', 'result']
+        assert list(history_df.columns) == expected_columns
+
+        # Assert that logger.info was called with the expected message
+        mock_logger_info.assert_called_with("Loaded existing history file")
 
 def test_manage_history_no_existing_file(app_instance):
     '''Test if manage_history correctly handles the absence of a history file and creates a new one'''

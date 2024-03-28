@@ -103,16 +103,27 @@ class App:
         data_store.hist_path = path_abs_hist_file
         log.debug("History File ABS Path:"+path_abs_hist_file)
         
-        
-        if (os.path.exists(path_abs_hist_file)): 
-            myDF = pd.read_csv(path_abs_hist_file)
-            log.info("Loaded existing history file")
-        else: 
+
+        columns = ['num1', 'operand', 'num2', 'result']
+        if os.path.exists(path_abs_hist_file):
+            try:
+                myDF = pd.read_csv(path_abs_hist_file)
+    
+                # Check if the file is empty or has no columns
+                if myDF.empty or myDF.columns.empty:
+                    raise pd.errors.EmptyDataError
+    
+                log.info("Loaded existing history file")
+            except pd.errors.EmptyDataError:
+                log.info("History File: The file exists but is empty, initializing with columns")
+                myDF = pd.DataFrame(columns=columns)
+                myDF.to_csv(path_abs_hist_file, index=False)
+                log.info("History File: Columns added and saved to " + path_abs_hist_file)
+        else:
             log.info("History File: Could not locate pre-existing file")
-            columns = ['num1', 'operand',  'num2', 'result']
             myDF = pd.DataFrame(columns=columns)
             myDF.to_csv(path_abs_hist_file, index=False)
-            log.info("History File: new History file created at " + path_abs_hist_file)
+            log.info("History File: New history file created at " + path_abs_hist_file)
             
         
         return myDF            

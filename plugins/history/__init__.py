@@ -52,7 +52,7 @@ class HistoryCommand(Command):
         try:
             print(data_store.hist_df)
         except Exception as e:
-            print(f"Error showing history: {e}")
+            log.error(f"Error showing history: {e}")
 
     def dummy(self, *args): 
         # insert dummy row
@@ -68,7 +68,7 @@ class HistoryCommand(Command):
         try:
             print(data_store.hist_df.iloc[-1])
         except IndexError:
-            print("Data frame is empty.")
+            log.error("Data frame is empty.")
     
 
     def add(self, *args): 
