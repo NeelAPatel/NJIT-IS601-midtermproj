@@ -39,7 +39,7 @@ class App:
         log_level = self.env_settings.get('LOG_LEVEL', 'DEBUG').upper()
 
         numeric_level = getattr(logging, log_level, None)
-        colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR', 'GREY']
+        colorize = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper() in ['COLOR','COLORED','GREY']
     
         root_logger = logging.getLogger()
         # Use config file for logger, otherwise take the defaults
