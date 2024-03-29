@@ -15,8 +15,6 @@ import logging as log
 
 class CalcCommand(Command): 
 
-    # def run_calculations(self, *args):
-    # @staticmethod
     def run_calculations(self, a:Decimal, b:Decimal, operation_name:str):
         # uses functions imported from calc.operations to randomly generate one of the ops
         operation_maps = {
@@ -82,7 +80,6 @@ class CalcCommand(Command):
             return
         elif not  2 < len(args) < 4:
             log.error("Error: Incorrect number of arguments for calc")
-            # self.defaultMessage(*args)
             return
         
 
@@ -90,8 +87,8 @@ class CalcCommand(Command):
             operation = args[0]
             a = args[1]
             b = b = args[2]
+
             #Take system args and run as a function
-            # self.run_calculations(self,*args)
             self.run_calculations(a, b, operation)
         except Exception as e:
             # Catch-all for any unexpected errors

@@ -2,6 +2,9 @@
 Neel Patel\
 nap48
 
+
+
+
 # Installation Instructions
 
 1. Install Python/Pip/Virtualenv, or ensure it is installed. 
@@ -15,6 +18,7 @@ virtualenv --version
 ```
 ```
 pip install faker
+pip install python-dotenv
 ```
 
 
@@ -43,9 +47,8 @@ pip3 install pytest pytest-pylint pytest-cov
 5. Run the pytest to see 100% coverage
 ```
 pytest --pylint --cov
+pytest --pylint -s --cov --cov-report html 
 ```
 
 Extra things to install
-```
-pip install python-dotenv ; environment variables
 ```

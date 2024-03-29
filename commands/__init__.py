@@ -37,11 +37,8 @@ class CommandHandler:
             args = parts[1:]
 
             # Execute command with args as potential parameter
-            # try:
             result = command.execute(*args)
             if result is not None: 
                 print(result)
-            # except Exception as e:
-            #     logging.error(f"Error executing command '{command_name}': {e}")
         else:
             logging.error(f"Command '{command_name}' not found.")

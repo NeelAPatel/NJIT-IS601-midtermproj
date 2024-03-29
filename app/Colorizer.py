@@ -25,21 +25,7 @@ class Colorizer(logging.Formatter):
         super().__init__(self.FORMAT)
         self.env_settings = env_settings
 
-    # def format(self, record):
-    #     log_fmt = self.FORMAT
-    #     log_colored_setting = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper()
-    #     full_message_color = self.DIM_GREY if log_colored_setting in ['COLOR', 'COLORED'] else ""
-    #     levelname_color = self.COLOR_MAP.get(record.levelno, self.RESET) if log_colored_setting in ['COLOR', 'COLORED'] else ""
-
-    #     # Apply color only to the log level part, and grey to the rest of the message if applicable
-    #     record.levelname = f"{levelname_color}{record.levelname}{full_message_color}"
-    #     formatted_message = super().format(record)
-
-    #     return f"{full_message_color}{formatted_message}{self.RESET}"
-
-
     def format(self, record):
-        log_fmt = self.FORMAT
         log_colored_setting = self.env_settings.get('LOG_COLORED', 'DEFAULT').upper()
 
         # Apply color only if colored logging is enabled

@@ -12,7 +12,7 @@ class HistoryCommand(Command):
         if len(args) == 0: 
             self.default_response()
         else: 
-            # Check which subcommand and fetch that method to trigger
+            # method/function dictionary
             switchcase_dict = {
                 'show': self.show, 
                 'clear': self.clear, 
@@ -23,11 +23,12 @@ class HistoryCommand(Command):
                 'delete': self.delete,
                 'reloadfile': self.reloadfile 
             }
+            #get method from args and store that method in variable 'method'
             method = switchcase_dict.get(args[0], self.default_response)
+
+            #execute that method
             method(*args)
 
-            # if (method not in [self.show, self.last, self.delete, self.save, self.add]): 
-            #     self.save(*args) #autosave
     
     def default_response(self, *args):
         message = ('Usage: \n'
@@ -61,6 +62,8 @@ class HistoryCommand(Command):
 
         print("New Dummy calculation added: ")
         print(new_row)
+
+        #autosave
         self.save(*args)
 
 
@@ -74,6 +77,7 @@ class HistoryCommand(Command):
 
     def add(self, *args): 
         # used by calc to save new data with args[0] = null
+        log.debug(args)
         try: 
             if (len(args) != 5): 
                 raise IndexError
@@ -84,6 +88,8 @@ class HistoryCommand(Command):
             data_store.hist_df.loc[len(data_store.hist_df)] = new_row
             print("New calculation added: ")
             print(new_row)
+
+            #autosave
             self.save(*args)
         except IndexError: 
             log.error("Error: Incorrect arguments for 'history add': $> history add <num1> <sign> <num2> <result>")
@@ -92,25 +98,29 @@ class HistoryCommand(Command):
             return
         
     def delete (self, *args): 
+        #Deletes a specific row in the dataframe --> Resets indexes
         log.debug(args)
 
-
-
+        # If arguments dont match, then error
         if len(args) != 2:
             log.error("Error: Incorrect number of arguments for 'delete'. Usage history delete [row_num]")
             return
         
-        # Check if the DataFrame is empty first
+        # If dataframe is empty, cannot delete anything
         if data_store.hist_df.empty:
             log.error("Error: Table is empty, no rows to delete.")
             return
         
         try:
+            # Get row index from parameter
             row_index = int(args[1])
-            # Resetting the index and dropping the old index column
+
+            # Delete specific row and reset/drop old index column
             data_store.hist_df.drop(index=row_index, inplace=True)
             data_store.hist_df.reset_index(drop=True, inplace=True)
             print(f"Row {row_index} deleted successfully.")
+
+            #autosave
             self.save()
         except ValueError:
             log.error("Error: Provided index is not an integer.")
@@ -119,34 +129,41 @@ class HistoryCommand(Command):
             log.error(f"Error: No row found at index {row_index}.")
             return
 
-
-    # works
     def save(self, *args):
+        #Saves file to local 
         my_df = data_store.hist_df
         my_df.to_csv(data_store.hist_path, index=False)
         print("!! Saved to File !!\n")
         log.info("File saved")
 
     def reloadfile(self, *args):
-            try:
-                data_store.hist_df = pd.read_csv(data_store.hist_path)
-                log.info("File read successfully")
-                # Resetting the index in case there are gaps from previous operations
-                data_store.hist_df.reset_index(drop=True, inplace=True)
-                print("Data successfully reloaded from file.")
-                log.info("File reloaded")
+        # Reloads the CSV file from local into memory
+        try:
+            #Read file from memory
+            data_store.hist_df = pd.read_csv(data_store.hist_path)
+            log.info("File read successfully")
 
-                self.show()
-            except FileNotFoundError:
-                log.error(f"File not found at {data_store.hist_path}. Ensure the file path is correct.")
-            except pd.errors.EmptyDataError:
-                log.error("File is empty. Starting with an empty DataFrame.")
-                columns = ['num1', 'operand', 'num2', 'result']
-                data_store.hist_df = pd.DataFrame(columns=columns)  # Creating an empty DataFrame
-                log.info("New History dataframe created")
-                self.save(*args)
-            except Exception as e:
-                log.error(f"An error occurred while reloading from file: {e}")
+            # Resetting the index in case there are gaps from previous operations
+            data_store.hist_df.reset_index(drop=True, inplace=True)
+            
+            # Now its successful
+            print("Data successfully reloaded from file.")
+            log.info("File reloaded")
+
+            self.show()
+        except FileNotFoundError:
+            log.error(f"File not found at {data_store.hist_path}. Ensure the file path is correct.")
+        except pd.errors.EmptyDataError:
+            log.error("File is empty. Starting with an empty DataFrame.")
+            #resetting dataframe to ensure columns exist at all times
+            columns = ['num1', 'operand', 'num2', 'result']
+            data_store.hist_df = pd.DataFrame(columns=columns)  # Creating an empty DataFrame
+            log.info("New History dataframe created")
+
+            #autosave
+            self.save(*args)
+        except Exception as e:
+            log.error(f"An error occurred while reloading from file: {e}")
 
     def clear(self, *args):
         #empties dataframe and saves
@@ -154,6 +171,8 @@ class HistoryCommand(Command):
             data_store.hist_df = data_store.hist_df[0:0]  # Clearing the DataFrame
             log.info("History - Dataframe cleared")
             print("Cleared history dataframe!")
+
+            #autosave
             self.save(*args)
         except Exception as e:
             log.error(f"History - Error clearing history: {e}")
